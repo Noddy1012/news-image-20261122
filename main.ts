@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,4 +7,9 @@ import { fileURLToPath } from "node:url";
 // No network, no randomness: two runs write identical bytes.
 const here = dirname(fileURLToPath(import.meta.url));
 mkdirSync("/output", { recursive: true });
-copyFileSync(join(here, "entry.png"), "/output/entry.png");
+const src = join(here, "entry.png");
+copyFileSync(src, "/output/entry.png");
+// Guard against a partial copy: the output must be the whole image.
+if (statSync("/output/entry.png").size !== statSync(src).size) {
+  throw new Error("entry.png copy is incomplete");
+}
